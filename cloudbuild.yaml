@@ -1,0 +1,15 @@
+steps:
+# build the Java app and package it into a jar
+- name: maven:3-eclipse-temurin-21-jammy
+  entrypoint: mvn
+  args: ["package", "-Dmaven.test.skip=true"]
+# use the Dockerfile to create a container image
+- name: gcr.io/cloud-builders/docker
+  args: ["build", "-t", "asia-south1-docker.pkg.dev/tech-rnd-project/niveus/springcloudrun:1.0.0", "--build-arg=JAR_FILE=target/springcloudrun-0.0.1-SNAPSHOT.jar", "."]
+# push the container image to the Registry
+- name: gcr.io/cloud-builders/docker
+  args: ["push", "asia-south1-docker.pkg.dev/tech-rnd-project/niveus/springcloudrun:1.0.0"]
+#deploy to Google Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'springcloudrun', '--image', 'asia-south1-docker.pkg.dev/tech-rnd-project/niveus/springcloudrun:1.0.0', '--region', 'asia-south1', '--platform', 'managed', '--ingress', 'internal-and-cloud-load-balancing',--allow-unauthenticated]
+images: ["asia-south1-docker.pkg.dev/tech-rnd-project/niveus/springcloudrun:1.0.0"]
